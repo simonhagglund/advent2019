@@ -32,8 +32,6 @@ borderColor =
 
 type Msg
     = Noop
-    | UpdateInputText String
-    | ChangeProblem Float
     | Update (Model -> Model)
 
 
@@ -54,7 +52,9 @@ type alias Renderer =
 
 views : List ( View, Renderer )
 views =
-    [ ( P1, P1.view ), ( P2, always ( text "P2", text "P2" ) ) ]
+    [ ( P1, P1.view )
+    , ( P2, always ( text "P2", text "P2" ) )
+    ]
 
 
 defaultView =
@@ -80,14 +80,6 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Noop ->
-            model
-
-        UpdateInputText str ->
-            { model
-                | text = Just str
-            }
-
-        ChangeProblem float ->
             model
 
         Update fn ->
@@ -125,6 +117,8 @@ viewProblems model =
                 [ Border.width 1
                 , Border.color borderColor
                 , Border.solid
+                , Border.rounded 10
+                , padding 4
                 ]
                 { onPress =
                     Update (\m -> { m | view = v })
@@ -191,11 +185,23 @@ inputView model =
         [ width fill
         , 800 |> px >> height
         ]
-        { onChange = UpdateInputText
+        { onChange =
+            \str ->
+                Update
+                    (\m ->
+                        { m
+                            | text =
+                                if str /= "" then
+                                    Just str
+
+                                else
+                                    Nothing
+                        }
+                    )
         , text = Maybe.withDefault "" model.text
         , placeholder = Nothing
         , label =
-            text "Input Problem"
+            text "Probem data"
                 |> Input.labelAbove [ moveUp 7 ]
         , spellcheck = False
         }

@@ -1,6 +1,12 @@
-module P1 exposing (..)
+module P1 exposing (view)
 
-import Element exposing (..)
+import Element
+    exposing
+        ( Element
+        , el
+        , none
+        , text
+        )
 
 
 type alias Model a =
@@ -11,7 +17,7 @@ type alias Model a =
 
 fuleFormula : Int -> Int
 fuleFormula fule =
-    fule // 3 - 2
+    max (fule // 3 - 2) 0
 
 
 answer : (Int -> Int) -> String -> String
@@ -19,7 +25,7 @@ answer fn ans =
     ans
         |> String.lines
         |> List.filterMap String.toInt
-        |> List.foldl (\a b -> b + fn a) 0
+        |> (List.map fn >> List.sum)
         |> String.fromInt
 
 
@@ -33,25 +39,17 @@ findTotalFule fule =
             |> (\s -> s + findTotalFule s)
 
 
-answerView : Model a -> ( String, Int -> Int ) -> List (Element msg)
-answerView model ( title, fn ) =
-    [ text title
-    , model.text
+answerView : Model a -> (Int -> Int) -> Element msg
+answerView model fn =
+    model.text
         |> Maybe.map
             (answer fn
                 >> text
-                >> el [ moveRight 20 ]
+                >> el []
             )
         |> Maybe.withDefault none
-    ]
 
 
-view : Model a -> Element msg
+view : Model a -> ( Element msg, Element msg )
 view model =
-    let
-        answers =
-            [ ( "Part 1", fuleFormula ), ( "Part 2", findTotalFule ) ]
-    in
-    answers
-        |> List.concatMap (answerView model)
-        |> column [ width fill, alignTop, width fill, paddingXY 10 40 ]
+    ( answerView model fuleFormula, answerView model findTotalFule )

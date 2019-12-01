@@ -48,9 +48,13 @@ type alias Model =
     }
 
 
-views : List ( View, Model -> Element Msg )
+type alias Renderer =
+    Model -> ( Element Msg, Element Msg )
+
+
+views : List ( View, Renderer )
 views =
-    [ ( P1, P1.view ), ( P2, always (text "P2") ) ]
+    [ ( P1, P1.view ), ( P2, always ( text "P2", text "P2" ) ) ]
 
 
 defaultView =
@@ -96,7 +100,7 @@ view model =
         |> problemView model
 
 
-getRenderer : View -> List ( View, Model -> Element Msg ) -> (Model -> Element Msg)
+getRenderer : View -> List ( View, Renderer ) -> Renderer
 getRenderer v xs =
     case xs of
         ( x, r ) :: ys ->
@@ -109,7 +113,7 @@ getRenderer v xs =
         [] ->
             text "Renderer not found"
                 |> el [ alignTop, width fill ]
-                |> always
+                |> (\e _ -> ( e, e ))
 
 
 viewProblems : Model -> Element Msg
@@ -135,8 +139,15 @@ viewProblems model =
             ]
 
 
-problemView : Model -> (Model -> Element Msg) -> Html Msg
+problemView : Model -> Renderer -> Html Msg
 problemView model renderer =
+    let
+        ( part1, part2 ) =
+            renderer model
+
+        answers =
+            [ ( "Part 1", part1 ), ( "Part 2", part2 ) ]
+    in
     column
         [ width fill
         , paddingXY 300 30
@@ -147,21 +158,27 @@ problemView model renderer =
             ]
             [ inputView model
                 |> el [ width fill ]
-            , column
-                [ width fill
-                ]
-                [ text "Solution"
-                    |> el [ moveUp 5 ]
-                , renderer model
-                    |> el
-                        [ width fill
-                        , Border.width 1
-                        , 800 |> px >> height
-                        , Border.color borderColor
-                        , Border.solid
-                        , moveDown 2
+            , answers
+                |> List.concatMap
+                    (\( title, part ) ->
+                        [ text title
+                        , part
+                            |> el
+                                [ width fill
+                                , Border.width 1
+                                , 380 |> px >> height
+                                , Border.color borderColor
+                                , Border.solid
+                                , moveDown 2
+                                , padding 10
+                                ]
                         ]
-                ]
+                    )
+                |> column
+                    [ width fill
+                    , spacing 10
+                    , moveUp 4
+                    ]
             ]
         , viewProblems model
         ]

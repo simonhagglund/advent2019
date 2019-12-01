@@ -112,10 +112,11 @@ getRenderer v xs =
                 |> always
 
 
+viewProblems : Model -> Element Msg
 viewProblems model =
     let
-        b : ( View, Model -> Element Msg ) -> Element Msg
-        b ( v, _ ) =
+        b : View -> Element Msg
+        b v =
             Input.button
                 [ Border.width 1
                 , Border.color borderColor
@@ -127,7 +128,7 @@ viewProblems model =
                 , label = Debug.toString v |> text
                 }
     in
-    List.map b views
+    List.map (Tuple.first >> b) views
         |> row
             [ spacing 3
             , padding 3

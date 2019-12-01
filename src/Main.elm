@@ -19,7 +19,6 @@ purple =
 type Msg
     = Noop
     | UpdateInputText String
-    | SubmitInput
 
 
 type alias Model =
@@ -47,9 +46,6 @@ update msg model =
             { model
                 | text = Just str
             }
-
-        SubmitInput ->
-            model
 
 
 fuleFormula : Int -> Int

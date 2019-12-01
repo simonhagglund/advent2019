@@ -4,26 +4,62 @@ import Browser
 import Debug
 import Element exposing (..)
 import Element.Background as Background
+import Element.Border as Border
 import Element.Input as Input
 import Html exposing (Html)
+import P1
+
+
+grey =
+    Element.rgb 0.9 0.9 0.9
 
 
 blue =
-    Element.rgb255 238 238 238
+    Element.rgb 0 0 0.8
 
 
-purple =
-    Element.rgb255 128 0 128
+red =
+    Element.rgb 0.8 0 0
+
+
+darkBlue =
+    Element.rgb 0 0 0.9
+
+
+borderColor =
+    rgba255 186 189 182 1.0
 
 
 type Msg
     = Noop
     | UpdateInputText String
+    | ChangeProblem Float
+    | Update (Model -> Model)
+
+
+type View
+    = P1
+    | P2
 
 
 type alias Model =
     { text : Maybe String
-    , fule : Maybe Int
+    , view : View
+    }
+
+
+views : List ( View, Model -> Element Msg )
+views =
+    [ ( P1, P1.view ), ( P2, always (text "P2") ) ]
+
+
+defaultView =
+    P1
+
+
+init =
+    { text = Nothing
+    , view = defaultView
     }
 
 
@@ -47,83 +83,101 @@ update msg model =
                 | text = Just str
             }
 
+        ChangeProblem float ->
+            model
 
-fuleFormula : Int -> Int
-fuleFormula fule =
-    fule // 3 - 2
-
-
-answer : (Int -> Int) -> String -> String
-answer fn ans =
-    ans
-        |> String.lines
-        |> List.filterMap String.toInt
-        |> List.foldl (\a b -> b + fn a) 0
-        |> String.fromInt
+        Update fn ->
+            fn model
 
 
-findTotalFule : Int -> Int
-findTotalFule fule =
-    if fule <= 6 then
-        0
-
-    else
-        fuleFormula fule
-            |> (\s -> s + findTotalFule s)
-
-
-answerView : Model -> ( String, Int -> Int ) -> List (Element Msg)
-answerView model ( title, fn ) =
-    [ text title
-    , model.text
-        |> Maybe.map
-            (answer fn
-                >> text
-                >> el [ moveRight 20 ]
-            )
-        |> Maybe.withDefault none
-    ]
-
-
+view : Model -> Html Msg
 view model =
+    getRenderer model.view views
+        |> problemView model
+
+
+getRenderer : View -> List ( View, Model -> Element Msg ) -> (Model -> Element Msg)
+getRenderer v xs =
+    case xs of
+        ( x, r ) :: ys ->
+            if v == x then
+                r
+
+            else
+                getRenderer v ys
+
+        [] ->
+            text "Renderer not found"
+                |> el [ alignTop, width fill ]
+                |> always
+
+
+viewProblems model =
     let
-        answers =
-            [ ( "Part 1", fuleFormula ), ( "Part 2", findTotalFule ) ]
+        b : ( View, Model -> Element Msg ) -> Element Msg
+        b ( v, _ ) =
+            Input.button
+                [ Border.width 1
+                , Border.color borderColor
+                , Border.solid
+                ]
+                { onPress =
+                    Update (\m -> { m | view = v })
+                        |> Just
+                , label = Debug.toString v |> text
+                }
     in
-    row
-        [ width fill ]
-        [ column [ width fill ]
+    List.map b views
+        |> row
+            [ spacing 3
+            , padding 3
+            ]
+
+
+problemView : Model -> (Model -> Element Msg) -> Html Msg
+problemView model renderer =
+    column
+        [ width fill
+        , paddingXY 300 30
+        ]
+        [ row
+            [ width fill
+            , spacing 20
+            ]
             [ inputView model
                 |> el [ width fill ]
+            , column
+                [ width fill
+                ]
+                [ text "Solution"
+                    |> el [ moveUp 5 ]
+                , renderer model
+                    |> el
+                        [ width fill
+                        , Border.width 1
+                        , 800 |> px >> height
+                        , Border.color borderColor
+                        , Border.solid
+                        , moveDown 2
+                        ]
+                ]
             ]
-        , answers
-            |> List.concatMap (answerView model)
-            |> column [ width fill, alignTop, width fill, paddingXY 10 40 ]
+        , viewProblems model
         ]
         |> layout []
 
 
 inputView : Model -> Element Msg
 inputView model =
-    let
-        currentText =
-            Maybe.withDefault "" model.text
-    in
     Input.multiline
         [ width fill
         , 800 |> px >> height
         ]
         { onChange = UpdateInputText
-        , text = currentText
+        , text = Maybe.withDefault "" model.text
         , placeholder = Nothing
         , label =
             text "Input Problem"
-                |> Input.labelAbove []
+                |> Input.labelAbove [ moveUp 7 ]
         , spellcheck = False
         }
-
-
-init =
-    { text = Nothing
-    , fule = Nothing
-    }

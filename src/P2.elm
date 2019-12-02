@@ -104,15 +104,24 @@ incPc program =
 
 execute : Program -> Array Int
 execute program =
+    let
+        store sa imidiate =
+            program.memory
+                |> Array.set sa imidiate
+                >> (\mem -> { program | memory = mem })
+    in
+    -- Fetch
     case run opCode program.instruction of
+        -- Decode
         Ok op ->
+            -- Execute
             case op of
                 Op1 la1 la2 sa ->
                     case ( Array.get la1 program.memory, Array.get la2 program.memory ) of
                         ( Just i1, Just i2 ) ->
-                            program.memory
-                                |> Array.set sa (i1 + i2)
-                                >> (\mem -> { program | memory = mem })
+                            -- Store
+                            (i1 + i2)
+                                |> store sa
                                 >> incPc
                                 >> execute
 
@@ -121,10 +130,10 @@ execute program =
 
                 Op2 la1 la2 sa ->
                     case ( Array.get la1 program.memory, Array.get la2 program.memory ) of
+                        -- Store
                         ( Just i1, Just i2 ) ->
-                            program.memory
-                                |> Array.set sa (i1 * i2)
-                                >> (\mem -> { program | memory = mem })
+                            (i1 * i2)
+                                |> store sa
                                 >> incPc
                                 >> execute
 

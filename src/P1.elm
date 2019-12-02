@@ -15,9 +15,9 @@ type alias Model a =
     }
 
 
-fuleFormula : Int -> Int
-fuleFormula fule =
-    max (fule // 3 - 2) 0
+fuelFormula : Int -> Int
+fuelFormula fuel =
+    max (fuel // 3 - 2) 0
 
 
 answer : (Int -> Int) -> String -> String
@@ -29,14 +29,14 @@ answer fn ans =
         |> String.fromInt
 
 
-findTotalFule : Int -> Int
-findTotalFule fule =
-    if fule <= 6 then
+totalFuel : Int -> Int
+totalFuel fuel =
+    if fuel <= 6 then
         0
 
     else
-        fuleFormula fule
-            |> (\s -> s + findTotalFule s)
+        fuelFormula fuel
+            |> (\s -> s + totalFuel s)
 
 
 answerView : Model a -> (Int -> Int) -> Element msg
@@ -52,4 +52,4 @@ answerView model fn =
 
 view : Model a -> ( Element msg, Element msg )
 view model =
-    ( answerView model fuleFormula, answerView model findTotalFule )
+    ( answerView model fuelFormula, answerView model totalFuel )

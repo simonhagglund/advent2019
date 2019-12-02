@@ -2,6 +2,7 @@ module P2 exposing (view)
 
 import Array exposing (Array)
 import Debug
+import Dict exposing (Dict)
 import Element
     exposing
         ( Element
@@ -10,13 +11,21 @@ import Element
         , fill
         , htmlAttribute
         , none
+        , padding
+        , rgba255
         , row
         , spacing
         , text
         , width
         )
+import Element.Border as Border
+import Element.Events as Events
 import Html.Attributes as HA
 import Parser exposing (..)
+
+
+borderColor =
+    rgba255 186 189 182 1.0
 
 
 type alias Program =
@@ -29,6 +38,7 @@ type alias Program =
 type alias Model a =
     { a
         | text : Maybe String
+        , state : Dict String Bool
     }
 
 
@@ -275,17 +285,33 @@ part2 model =
         [ results |> text ]
 
 
-view : Model a -> ( Element msg, Element msg )
-view model =
+view :
+    Model a
+    -> ((Model a -> Model a) -> msg)
+    -> ( Element msg, Element msg )
+view model update =
     let
-        program =
-            model.text
-                |> Maybe.withDefault ""
-
-        initialMemMap =
-            program
-                |> String.split ","
-                >> List.filterMap String.toInt
-                >> Array.fromList
+        open =
+            model.state
+                |> Dict.get "p2_open"
+                |> Maybe.withDefault False
     in
-    ( part1 model, part2 model )
+    if open then
+        ( part1 model, part2 model )
+
+    else
+        ( text "Run IntCode"
+            |> el
+                [ update
+                    (\m ->
+                        { m | state = m.state |> Dict.insert "p2_open" True }
+                    )
+                    |> Events.onClick
+                , Border.width 1
+                , Border.color borderColor
+                , Border.solid
+                , Border.rounded 10
+                , padding 4
+                ]
+        , none
+        )

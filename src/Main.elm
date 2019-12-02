@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Browser
 import Debug
+import Dict exposing (Dict)
 import Element exposing (..)
 import Element.Background as Background
 import Element.Border as Border
@@ -45,11 +46,14 @@ type View
 type alias Model =
     { text : Maybe String
     , view : View
+    , state : Dict String Bool
     }
 
 
 type alias Renderer =
-    Model -> ( Element Msg, Element Msg )
+    Model
+    -> ((Model -> Model) -> Msg)
+    -> ( Element Msg, Element Msg )
 
 
 views : List ( View, Renderer )
@@ -70,6 +74,7 @@ defaultText =
 init =
     { text = Just defaultText
     , view = defaultView
+    , state = Dict.empty
     }
 
 
@@ -111,7 +116,7 @@ getRenderer v xs =
         [] ->
             text "Renderer not found"
                 |> el [ alignTop, width fill ]
-                |> (\e _ -> ( e, e ))
+                |> (\e _ _ -> ( e, e ))
 
 
 viewProblems : Model -> Element Msg
@@ -143,7 +148,7 @@ problemView : Model -> Renderer -> Html Msg
 problemView model renderer =
     let
         ( part1, part2 ) =
-            renderer model
+            renderer model Update
 
         answers =
             [ ( "Part 1", part1 ), ( "Part 2", part2 ) ]

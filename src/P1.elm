@@ -50,6 +50,9 @@ answerView model fn =
         |> Maybe.withDefault none
 
 
-view : Model a -> ( Element msg, Element msg )
-view model =
+view :
+    Model a
+    -> ((Model a -> Model a) -> msg)
+    -> ( Element msg, Element msg )
+view model _ =
     ( answerView model fuelFormula, answerView model totalFuel )
